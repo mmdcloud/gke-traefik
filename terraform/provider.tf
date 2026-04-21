@@ -4,15 +4,15 @@ terraform {
   required_providers {
     google = {
       source  = "hashicorp/google"
-      version = "~> 5.0"
+      version = "~> 7.0"
     }
     helm = {
       source  = "hashicorp/helm"
-      version = "~> 2.12"
+      version = "~> 3.0"
     }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = "~> 2.25"
+      version = "~> 3.0"
     }
     time = {
       source  = "hashicorp/time"
@@ -29,6 +29,8 @@ provider "google" {
 # -----------------------------------------------------------------
 # Kubernetes and Helm providers use GKE cluster credentials directly
 # -----------------------------------------------------------------
+data "google_client_config" "default" {}
+
 provider "kubernetes" {
   host  = "https://${google_container_cluster.primary.endpoint}"
   token = data.google_client_config.default.access_token
@@ -46,5 +48,3 @@ provider "helm" {
     )
   }
 }
-
-data "google_client_config" "default" {}

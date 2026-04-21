@@ -90,7 +90,11 @@ resource "google_container_cluster" "primary" {
 
   network    = google_compute_network.vpc.id
   subnetwork = google_compute_subnetwork.subnet.id
-
+  node_config {
+    machine_type = "e2-medium"
+    disk_type    = "pd-balanced"
+    disk_size_gb = 30
+  }
   # Release channel controls minor version upgrades
   release_channel {
     channel = var.release_channel
@@ -190,8 +194,8 @@ resource "google_container_node_pool" "system" {
 
   node_config {
     machine_type = var.system_machine_type
-    disk_size_gb = 50
-    disk_type    = "pd-ssd"
+    disk_size_gb = 30
+    disk_type    = "pd-balanced"
 
     service_account = google_service_account.gke_sa.email
     oauth_scopes    = ["https://www.googleapis.com/auth/cloud-platform"]
@@ -244,7 +248,7 @@ resource "google_container_node_pool" "apps" {
 
   node_config {
     machine_type = var.app_machine_type
-    disk_size_gb = 100
+    disk_size_gb = 30
     disk_type    = "pd-balanced"
 
     service_account = google_service_account.gke_sa.email

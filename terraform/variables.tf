@@ -73,13 +73,13 @@ variable "app_node_max" {
 variable "system_machine_type" {
   description = "Machine type for system node pool"
   type        = string
-  default     = "e2-standard-2"
+  default     = "e2-medium"
 }
 
 variable "app_machine_type" {
   description = "Machine type for app node pool"
   type        = string
-  default     = "e2-standard-4"
+  default     = "e2-medium"
 }
 
 variable "kubernetes_version" {
