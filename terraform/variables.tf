@@ -133,3 +133,43 @@ variable "labels" {
     environment = "platform"
   }
 }
+
+# ------------------------------------------------------------------------
+# Traefik — append these to your existing variables.tf
+# ------------------------------------------------------------------------
+
+variable "traefik_chart_version" {
+  description = "Traefik Helm chart version — pin this, don't use latest"
+  type        = string
+  default     = "33.2.1" # Traefik v3.3.x
+}
+
+variable "traefik_replicas" {
+  description = "Number of Traefik replicas. Regional cluster has 3 system-pool nodes (1 per zone), so 2-3 gives you zone-spread HA."
+  type        = number
+  default     = 2
+}
+
+variable "traefik_is_default_ingress_class" {
+  description = "Whether Traefik becomes the default IngressClass. Set false if you want to keep GCE ingress as default and use ingressClassName: traefik explicitly."
+  type        = bool
+  default     = false # Safe default — GCE ingress controller is already active in the cluster
+}
+
+variable "traefik_dashboard_enabled" {
+  description = "Enable the Traefik dashboard (accessible via kubectl port-forward only)"
+  type        = bool
+  default     = true
+}
+
+variable "traefik_enable_cert_manager" {
+  description = "Enable ACME/Let's Encrypt via cert-manager. Set true after cert-manager is installed."
+  type        = bool
+  default     = false
+}
+
+variable "traefik_acme_email" {
+  description = "Email for Let's Encrypt ACME registration — required when traefik_enable_cert_manager = true"
+  type        = string
+  default     = "admin@example.com"
+}
