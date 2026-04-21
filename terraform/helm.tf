@@ -120,9 +120,9 @@ resource "helm_release" "traefik" {
       # -----------------------------------------------------------------------
       ports = {
         web = {
-          port           = 8000
-          exposedPort    = 80
-          expose         = { default = true }
+          port        = 8000
+          exposedPort = 80
+          expose      = { default = true }
           # Redirect all HTTP → HTTPS at the entrypoint level
           redirections = {
             entryPoint = {
@@ -141,13 +141,13 @@ resource "helm_release" "traefik" {
         }
         # Traefik dashboard — internal only, not exposed via LB
         traefik = {
-          port    = 9000
-          expose  = { default = false }
+          port   = 9000
+          expose = { default = false }
         }
         # Metrics port for GKE Managed Prometheus scraping
         metrics = {
-          port    = 9100
-          expose  = { default = false }
+          port   = 9100
+          expose = { default = false }
         }
       }
 
@@ -169,11 +169,11 @@ resource "helm_release" "traefik" {
       providers = {
         kubernetesCRD = {
           enabled                   = true
-          allowCrossNamespace       = true  # Lets app teams in other ns use IngressRoutes
+          allowCrossNamespace       = true # Lets app teams in other ns use IngressRoutes
           allowExternalNameServices = false
         }
         kubernetesIngress = {
-          enabled                   = true  # Also handles standard Ingress objects
+          enabled                   = true # Also handles standard Ingress objects
           allowExternalNameServices = false
           publishedService = {
             enabled = true # Writes LB IP back to Ingress .status.loadBalancer
@@ -216,7 +216,7 @@ resource "helm_release" "traefik" {
 
       ingressRoute = {
         dashboard = {
-          enabled    = var.traefik_dashboard_enabled
+          enabled     = var.traefik_dashboard_enabled
           entryPoints = ["traefik"] # Internal port only, never the LB
         }
       }
@@ -227,7 +227,7 @@ resource "helm_release" "traefik" {
       # -----------------------------------------------------------------------
       metrics = {
         prometheus = {
-          entryPoint = "metrics"
+          entryPoint           = "metrics"
           addEntryPointsLabels = true
           addRoutersLabels     = true
           addServicesLabels    = true
@@ -267,12 +267,7 @@ resource "helm_release" "traefik" {
       }
 
       serviceAccount = {
-        create = true
-        name   = "traefik"
-        # Workload Identity annotation — add if Traefik ever needs GCP API access
-        # annotations = {
-        #   "iam.gke.io/gcp-service-account" = "traefik@${var.project_id}.iam.gserviceaccount.com"
-        # }
+        name    = "traefik"
       }
 
       # -----------------------------------------------------------------------
@@ -314,7 +309,7 @@ resource "helm_release" "traefik" {
       # Global args
       # -----------------------------------------------------------------------
       globalArguments = [
-        "--global.checknewversion=false",  # No phone-home
+        "--global.checknewversion=false", # No phone-home
         "--global.sendanonymoususage=false"
       ]
     })
@@ -331,33 +326,47 @@ resource "helm_release" "traefik" {
 # GMP is enabled via managed_prometheus { enabled = true } in the cluster.
 # This replaces a ServiceMonitor when using GMP's in-cluster collection.
 # ------------------------------------------------------------------------
-resource "kubernetes_manifest" "traefik_pod_monitor" {
-  manifest = {
-    apiVersion = "monitoring.googleapis.com/v1"
-    kind       = "PodMonitor"
-    metadata = {
-      name      = "traefik"
-      namespace = kubernetes_namespace.traefik.metadata[0].name
-      labels    = var.labels
-    }
-    spec = {
-      selector = {
-        matchLabels = {
-          "app.kubernetes.io/name" = "traefik"
-        }
-      }
-      podMetricsEndpoints = [
+resource "helm_release" "traefik_pod_monitor" {
+  name             = "traefik-podmonitor"
+  repository       = "https://charts.helm.sh/incubator" # dummy — we use chart = "raw"
+  chart            = "raw"
+  version          = "0.2.5"
+  namespace        = kubernetes_namespace.traefik.metadata[0].name
+  create_namespace = false
+
+  values = [
+    yamlencode({
+      resources = [
         {
-          port     = "metrics"
-          path     = "/metrics"
-          interval = "30s"
+          apiVersion = "monitoring.googleapis.com/v1"
+          kind       = "PodMonitor"
+          metadata = {
+            name      = "traefik"
+            namespace = kubernetes_namespace.traefik.metadata[0].name
+            labels    = var.labels
+          }
+          spec = {
+            selector = {
+              matchLabels = {
+                "app.kubernetes.io/name" = "traefik"
+              }
+            }
+            podMetricsEndpoints = [
+              {
+                port     = "metrics"
+                path     = "/metrics"
+                interval = "30s"
+              }
+            ]
+          }
         }
       ]
-    }
-  }
+    })
+  ]
 
   depends_on = [helm_release.traefik]
 }
+
 
 # ------------------------------------------------------------------------
 # NetworkPolicy — Calico is enforced in this cluster.

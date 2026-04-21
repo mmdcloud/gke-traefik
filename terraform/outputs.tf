@@ -30,9 +30,9 @@ output "workload_identity_pool" {
   value       = "${var.project_id}.svc.id.goog"
 }
 
-output "crossplane_namespace" {
+output "traefik_namespace" {
   description = "Namespace where Crossplane is installed"
-  value       = kubernetes_namespace.crossplane_system.metadata[0].name
+  value       = kubernetes_namespace.traefik.metadata[0].name
 }
 
 output "get_credentials_command" {

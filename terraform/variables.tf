@@ -134,10 +134,6 @@ variable "labels" {
   }
 }
 
-# ------------------------------------------------------------------------
-# Traefik — append these to your existing variables.tf
-# ------------------------------------------------------------------------
-
 variable "traefik_chart_version" {
   description = "Traefik Helm chart version — pin this, don't use latest"
   type        = string
